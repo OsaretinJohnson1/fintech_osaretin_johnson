@@ -2,12 +2,321 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fintech Project - Osaretin Johnson</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0a0a0b">
+    <meta name="description" content="Visualizing how digital finance and open banking enabling factors support financial inclusion across countries.">
+    <title>Open Banking Adoption & Cashless Future Simulator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
-    <h1>Welcome to Fintech Project</h1>
-    <p>This is a modern fintech application designed to provide innovative financial technology solutions. Our platform leverages cutting-edge technology to deliver secure, efficient, and user-friendly financial services that transform how people manage their finances.</p>
+    <header>
+        <h1>Open Banking Adoption and Cashless Future Simulator</h1>
+        <p class="subtitle">
+            Visualising how digital finance and open banking enabling factors support financial inclusion across countries.
+        </p>
+        <p class="narrative">
+            Open banking depends on secure data sharing, reliable digital infrastructure, and broad access to financial services.
+            This dashboard shows how countries with stronger digital adoption and higher levels of financial inclusion are
+            better positioned to move toward cashless and open banking enabled financial systems.
+        </p>
+    </header>
+    
+
+    <main>
+        <!-- Loading State -->
+        <div id="loading" class="loading-container">
+            <div class="spinner"></div>
+            <p>Loading data...</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="error" class="error-container" style="display: none;">
+            <p>Unable to fetch data</p>
+            <button id="retry-btn" class="retry-button">Retry</button>
+        </div>
+
+        <!-- Dashboard Grid -->
+        <div id="dashboard" class="dashboard" style="display: none;">
+            <!-- Chart 1: Line Chart - Financial Inclusion Growth -->
+            <section class="chart-container">
+                <h2>Financial Inclusion Growth</h2>
+                <p class="chart-description">Growth of bank account ownership over time (per country). Open banking cannot exist without broad access to bank accounts.</p>
+                <canvas id="lineChart"></canvas>
+            </section>
+
+            <!-- Chart 2: Bar Chart - Digital Payments Adoption -->
+            <section class="chart-container">
+                <h2>Digital Payments Adoption</h2>
+                <p class="chart-description">Digital payment usage by country. Digital payments are a key driver of API-based financial services and fintech innovation.</p>
+                <canvas id="barChart"></canvas>
+            </section>
+
+            <!-- Chart 3: Doughnut Chart - Cash vs Digital Banking -->
+            <section class="chart-container">
+                <h2>Cash vs Digital Banking</h2>
+                <p class="chart-description">Mobile money vs traditional banking usage. Highlights how countries are shifting toward cashless, API-driven financial systems.</p>
+<div class="doughnut-controls">
+                    <div class="control-group">
+                        <label for="doughnut-country-select">Select Country:</label>
+                        <select id="doughnut-country-select"></select>
+                    </div>
+                </div>
+                <canvas id="doughnutChart"></canvas>
+            </section>
+
+            <!-- Chart 4: Projection Line Chart - Cashless Future Simulator -->
+            <section class="chart-container projection-container">
+                <h2>Cashless Future Simulator</h2>
+                <p class="chart-description">Projected growth of digital payments based on historical trends. Transforms static data into a future-facing fintech simulation.</p>
+                <div class="projection-controls">
+                    <div class="control-group">
+                        <label for="projection-country-select">Select Country:</label>
+                        <select id="projection-country-select"></select>
+                    </div>
+                    <div class="control-group">
+                        <label for="projection-year-select">Select Future Year:</label>
+                        <select id="projection-year-select">
+                            <option value="2025">2025</option>
+                            <option value="2026">2026</option>
+                            <option value="2027">2027</option>
+                            <option value="2028">2028</option>
+                            <option value="2029">2029</option>
+                            <option value="2030">2030</option>
+                            <option value="2031">2031</option>
+                            <option value="2032">2032</option>
+                            <option value="2033">2033</option>
+                            <option value="2034">2034</option>
+                            <option value="2035">2035</option>
+                        </select>
+                    </div>
+                </div>
+                <canvas id="projectionChart"></canvas>
+                
+                <!-- Launch Race Simulator Button -->
+                <button class="launch-race-btn" id="launch-race">
+                    Launch Country Race Simulator
+                </button>
+            </section>
+
+            <!-- Chart 5: Data Table - Transparency Layer -->
+            <section class="chart-container table-container">
+                <h2>Data Transparency</h2>
+                <p class="chart-description">Raw indicator values by country and year. Shows credibility, transparency, and good data ethics.</p>
+                <div class="table-controls">
+                    <input type="text" id="table-search" placeholder="Search countries..." class="search-input">
+                    <button id="sort-btn" class="sort-button">Sort by Country</button>
+                </div>
+                <div class="table-wrapper">
+                    <table id="dataTable">
+                        <thead>
+                            <tr>
+                                <th>Country</th>
+                                <th>Year</th>
+                                <th>Bank Account %</th>
+                                <th>Mobile Money %</th>
+                                <th>Digital Payments %</th>
+                                <th>Internet Access %</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <p>Data Source: <a href="https://data.worldbank.org/" target="_blank">World Bank Open Data API</a></p>
+        <p>Project by Osaretin Johnson</p>
+    </footer>
+
+    <!-- Race Simulator Modal -->
+    <div id="race-modal" class="race-modal">
+        <div class="race-modal-content">
+            <button class="modal-close" id="close-race">&times;</button>
+            
+            <div class="race-header">
+                <h2>Country Race to Cashless Future</h2>
+                <p>Select countries, set policies, and watch them race to digital adoption!</p>
+                <button class="help-button" id="race-help">How It Works</button>
+            </div>
+
+            <!-- Help Panel -->
+            <div id="race-help-panel" class="help-panel hidden">
+                <h4>Understanding the Race</h4>
+                <div class="help-content">
+                    <div class="help-section">
+                        <h5>Data Source</h5>
+                        <p>Projections based on World Bank financial inclusion data and historical adoption trends.</p>
+                    </div>
+                    <div class="help-section">
+                        <h5>Budget Allocation</h5>
+                        <p>$100M represents significant national investment (like Kenya's $50M M-Pesa program over 5 years).</p>
+                    </div>
+                    <div class="help-section">
+                        <h5>Policy Impact</h5>
+                        <p>Each policy accelerates adoption differently. Balanced approaches usually win!</p>
+                    </div>
+                </div>
+                <button class="btn-secondary small" id="close-help">Got it</button>
+            </div>
+
+            <!-- Setup Phase -->
+            <div id="race-setup" class="race-setup">
+                <div class="setup-section">
+                    <h3>Select Racing Countries (2-4)</h3>
+                    <div class="country-selector-grid" id="country-selector">
+                        <!-- Will be populated dynamically -->
+                    </div>
+                </div>
+
+                <div class="setup-section">
+                    <h3>Race Settings</h3>
+                    <div class="race-settings">
+                        <div class="setting-item">
+                            <label for="race-target">Target Adoption %:</label>
+                            <input type="number" id="race-target" min="50" max="100" value="80" step="5">
+                        </div>
+                        <div class="setting-item">
+                            <label for="race-year">Target Year:</label>
+                            <select id="race-year">
+                                <option value="2027">2027</option>
+                                <option value="2028">2028</option>
+                                <option value="2029">2029</option>
+                                <option value="2030" selected>2030</option>
+                                <option value="2031">2031</option>
+                                <option value="2032">2032</option>
+                                <option value="2035">2035</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn-primary btn-large" id="start-policies">
+                    📋 Set Policies for Countries
+                </button>
+            </div>
+
+            <!-- Policy Phase -->
+            <div id="race-policies" class="race-policies hidden">
+                <div class="policy-header">
+                    <h3>Set Policies for Each Country
+                        <span class="help-icon" data-tooltip="Each policy area accelerates digital adoption differently. Hover sliders for details">Info</span>
+                    </h3>
+                    <p>Allocate $100M budget per country across four policy areas</p>
+
+                    <div class="budget-explanation">
+                        <small class="budget-context">
+                            <strong>Why $100M?</strong> This represents a significant national investment level.
+                            Countries like Kenya invested ~$50M in M-Pesa over 5 years.
+                            Your allocation determines policy focus and growth acceleration.
+                        </small>
+                    </div>
+                </div>
+                
+                <div id="policy-countries" class="policy-grid">
+                    <!-- Will be populated for each selected country -->
+                </div>
+
+                <div class="policy-actions">
+                    <button class="btn-secondary" id="back-to-setup">← Back</button>
+                <button class="btn-success btn-large" id="start-race">
+                    Start Race!
+                </button>
+                </div>
+            </div>
+
+            <!-- Race Animation Phase -->
+            <div id="race-animation" class="race-animation hidden">
+                <div class="race-track-container">
+                    <div class="race-info-panel">
+                        <div class="race-info">
+                            <div class="info-item">
+                                <span class="info-label">Year:</span>
+                                <span class="info-value" id="current-race-year">2024</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Target:</span>
+                                <span class="info-value" id="race-target-display">80%</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Total Invested:</span>
+                                <span class="info-value" id="total-invested">$400M</span>
+                            </div>
+                        </div>
+
+                        <div class="race-explanation">
+                            <button class="help-toggle" id="race-explanation-toggle">What's Happening?</button>
+                            <div class="explanation-panel hidden" id="race-explanation">
+                                <p><strong>Real-time Simulation:</strong> Each country's progress is calculated using their policy allocations and historical World Bank data trends.</p>
+                                <p><strong>Growth Rates:</strong> Fintech investments accelerate adoption faster than education programs, but balanced approaches win races.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="race-tracks" class="race-tracks">
+                        <!-- Racing lanes will be generated here -->
+                    </div>
+                </div>
+
+                <div class="race-controls">
+                    <button class="btn-secondary" id="skip-race">Skip to Results</button>
+                </div>
+            </div>
+
+            <!-- Results Phase -->
+            <div id="race-results" class="race-results hidden">
+                <div class="results-header">
+                    <div class="winner-announcement">
+                        <h2><span id="winner-name">Winner</span> Wins!</h2>
+                        <p>Reached <span id="winner-percent">80</span>% adoption first!</p>
+                    </div>
+                </div>
+
+                <div class="results-grid" id="results-leaderboard">
+                    <!-- Leaderboard will be populated here -->
+                </div>
+
+                <div class="results-actions">
+                    <button class="btn-info" id="show-reality-check">
+                        Reality Check - Compare to Actual Data
+                    </button>
+                    <button class="btn-secondary" id="new-race">
+                        New Race
+                    </button>
+                    <button class="btn-success" id="share-race">
+                        Share Results
+                    </button>
+                </div>
+
+                <!-- Reality Check Panel -->
+                <div id="reality-check-panel" class="reality-check-panel hidden">
+                    <h3>Reality Check: How Realistic Are These Results?</h3>
+                    
+                    <div class="reality-intro">
+                        <p>Let's compare your race results to actual baseline projections from World Bank data...</p>
+                    </div>
+
+                    <div id="reality-comparisons" class="reality-grid">
+                        <!-- Reality comparisons will be populated here -->
+                    </div>
+
+                    <div class="reality-insights">
+                        <h4>Key Insights</h4>
+                        <ul id="reality-insights-list">
+                            <!-- Insights will be added here -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
-
