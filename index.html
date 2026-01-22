@@ -31,7 +31,7 @@
                 <span class="nav-label">Country Analysis</span>
             </a>
             <a href="simulator.html" class="nav-item">
-                <span class="nav-label">Simulator</span>
+                <span class="nav-label">Simulator Game</span>
             </a>
             <a href="data.html" class="nav-item">
                 <span class="nav-label">Data</span>
@@ -68,21 +68,14 @@
         <!-- Overview Page Content -->
         <h2 class="content-heading">Financial Inclusion & Cashless Future Analytics</h2>
         <div class="dashboard">
-                    <!-- Chart 1: Line Chart - Financial Inclusion Growth -->
-                    <section class="chart-container">
+                    <!-- Chart 1: Line Chart - Financial Inclusion Growth (Full Width) -->
+                    <section class="chart-container chart-large">
                         <h2>Financial Inclusion Growth</h2>
                         <p class="chart-description">Growth of bank account ownership over time (per country). Open banking cannot exist without broad access to bank accounts.</p>
                         <canvas id="lineChart"></canvas>
                     </section>
 
-                    <!-- Chart 2: Bar Chart - Digital Payments Adoption -->
-                    <section class="chart-container">
-                        <h2>Digital Payments Adoption</h2>
-                        <p class="chart-description">Digital payment usage by country. Digital payments are a key driver of API-based financial services and fintech innovation.</p>
-                        <canvas id="barChart"></canvas>
-                    </section>
-
-                    <!-- Chart 3: Doughnut Chart - Cash vs Digital Banking -->
+                    <!-- Chart 2: Doughnut Chart - Cash vs Digital Banking -->
                     <section class="chart-container">
                         <h2>Cash vs Digital Banking</h2>
                         <p class="chart-description">Mobile money vs traditional banking usage. Highlights how countries are shifting toward cashless, API-driven financial systems.</p>
@@ -95,8 +88,15 @@
                         <canvas id="doughnutChart"></canvas>
                     </section>
 
+                    <!-- Chart 3: Bar Chart - Digital Payments Adoption -->
+                    <section class="chart-container">
+                        <h2>Digital Payments Adoption</h2>
+                        <p class="chart-description">Digital payment usage by country. Digital payments are a key driver of API-based financial services and fintech innovation.</p>
+                        <canvas id="barChart"></canvas>
+                    </section>
+
                     <!-- Chart 4: Projection Line Chart - Cashless Future Simulator -->
-                    <section class="chart-container projection-container">
+                    <section class="chart-container projection-container chart-large">
                         <h2>Cashless Future Simulator</h2>
                         <p class="chart-description">Projected growth of digital payments based on historical trends. Transforms static data into a future-facing fintech simulation.</p>
                         <div class="projection-controls">
@@ -121,32 +121,8 @@
                                 </select>
                             </div>
                         </div>
-                        <canvas id="projectionChart"></canvas>
-                    </section>
-
-                    <!-- Chart 5: Data Table - Transparency Layer -->
-                    <section class="chart-container table-container">
-                        <h2>Data Transparency</h2>
-                        <p class="chart-description">Raw indicator values by country and year. Shows credibility, transparency, and good data ethics.</p>
-                        <div class="table-controls">
-                            <input type="text" id="table-search" placeholder="Search countries..." class="search-input">
-                            <button id="sort-btn" class="sort-button">Sort by Country</button>
-                        </div>
-                        <div class="table-wrapper">
-                            <table id="dataTable">
-                                <thead>
-                                    <tr>
-                                        <th>Country</th>
-                                        <th>Year</th>
-                                        <th>Bank Account %</th>
-                                        <th>Mobile Money %</th>
-                                        <th>Digital Payments %</th>
-                                        <th>Internet Access %</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tableBody">
-                                </tbody>
-                            </table>
+                        <div class="projection-chart-wrapper">
+                            <canvas id="projectionChart"></canvas>
                         </div>
                     </section>
                 </div>

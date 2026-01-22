@@ -628,6 +628,21 @@ main {
     gap: var(--space-xl);
 }
 
+/* Large chart spans full width */
+.chart-large {
+    grid-column: 1 / -1;
+}
+
+/* Overview page: 2-column layout (targeting index.html specifically) */
+body:not(.analysis-page) .dashboard {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+/* Analysis page: Full width layout */
+.analysis-page .dashboard {
+    grid-template-columns: 1fr;
+}
+
 /* Data Page - Full page layout instead of card */
 .data-page {
     width: 100%;
@@ -705,6 +720,18 @@ main {
     border: 1px solid var(--border-subtle);
     transition: all var(--transition-base);
     overflow: hidden;
+}
+
+/* Chart canvas sizing */
+.chart-container canvas {
+    max-height: 400px;
+    width: 100% !important;
+    height: auto !important;
+}
+
+/* Bar chart specific adjustments for better fit */
+#barChart {
+    max-height: 350px;
 }
 
 /* Gradient border effect on hover */
@@ -961,19 +988,45 @@ canvas {
    Form Controls
    =========================== */
 .doughnut-controls,
-.projection-controls {
+/* Projection Container - Flexbox Layout */
+.projection-container {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+.projection-controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: var(--space-md);
-    margin-bottom: var(--space-lg);
+    margin-bottom: 0;
 }
 
 .control-group {
     display: flex;
     flex-direction: column;
     gap: var(--space-sm);
+    min-width: 0;
+    /* Prevents overflow */
+}
+
+/* Chart canvas wrapper for responsive sizing */
+.projection-chart-wrapper {
+    position: relative;
+    width: 100%;
+    min-height: 300px;
+    max-height: 500px;
     flex: 1;
-    min-width: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.projection-container canvas {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100%;
+    max-height: 100%;
 }
 
 .control-group label {
@@ -1336,7 +1389,12 @@ footer a:hover::after {
 
     .doughnut-controls,
     .projection-controls {
-        flex-direction: column;
+        grid-template-columns: 1fr;
+    }
+
+    .projection-chart-wrapper {
+        min-height: 250px;
+        max-height: 300px;
     }
 
     .control-group {
@@ -1562,6 +1620,11 @@ footer a:hover::after {
         grid-template-columns: repeat(2, 1fr);
     }
 
+    /* Ensure large charts span full width */
+    body:not(.analysis-page) .chart-large {
+        grid-column: 1 / -1;
+    }
+
     .chart-container {
         padding: var(--space-xl);
     }
@@ -1623,6 +1686,11 @@ footer a:hover::after {
         gap: var(--space-xl);
         /* 2-column grid */
         grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* Ensure large charts span full width on overview */
+    body:not(.analysis-page) .chart-large {
+        grid-column: 1 / -1;
     }
 
     .chart-container {
@@ -1688,10 +1756,9 @@ footer a:hover::after {
         padding: var(--space-2xl);
     }
 
-    /* Line and Bar charts side by side */
-    .chart-container:nth-child(1),
-    .chart-container:nth-child(2) {
-        grid-column: span 1;
+    /* Ensure large charts span full width on overview */
+    body:not(.analysis-page) .chart-large {
+        grid-column: 1 / -1;
     }
 
     /* Doughnut and Table side by side */
@@ -3920,6 +3987,11 @@ footer a:hover::after {
 
     .results-grid {
         grid-template-columns: repeat(3, 1fr);
+    }
+
+    /* Ensure large charts span full width on overview */
+    body:not(.analysis-page) .chart-large {
+        grid-column: 1 / -1;
     }
 }
 

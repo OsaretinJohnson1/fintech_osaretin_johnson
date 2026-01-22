@@ -342,11 +342,13 @@ function renderAllCharts() {
     renderBarChart();
     updateDoughnutChart();
     updateProjectionChart();
-    renderDataTable();
 }
 
 // Initialize analysis view charts
 function initializeAnalysisCharts() {
+    // Render correlation chart first (large chart on analysis page)
+    renderCorrelationChart();
+
     // Check if charts already exist, if not create them
     const doughnutCanvas = document.getElementById('doughnutChart-analysis');
     const projectionCanvas = document.getElementById('projectionChart-analysis');
@@ -552,7 +554,8 @@ function createProjectionChartForAnalysis(ctx, countryCode, targetYear) {
         },
         options: {
             responsive: true,
-            maintainAspectRatio: true,
+            maintainAspectRatio: false,
+            aspectRatio: 2,
             interaction: {
                 mode: 'index',
                 intersect: false
@@ -854,7 +857,8 @@ function renderLineChart() {
         },
         options: {
             responsive: true,
-            maintainAspectRatio: true,
+            maintainAspectRatio: false,
+            aspectRatio: 2,
             interaction: {
                 mode: 'index',
                 intersect: false
@@ -1015,7 +1019,16 @@ function renderBarChart() {
         },
         options: {
             responsive: true,
-            maintainAspectRatio: true,
+            maintainAspectRatio: false,
+            aspectRatio: 1.5,
+            layout: {
+                padding: {
+                    top: 10,
+                    bottom: 10,
+                    left: 10,
+                    right: 10
+                }
+            },
             plugins: {
                 legend: {
                     display: false
@@ -1046,16 +1059,17 @@ function renderBarChart() {
                         drawBorder: false
                     },
                     ticks: {
-                        font: { family: "'JetBrains Mono', monospace", size: 11 },
+                        font: { family: "'JetBrains Mono', monospace", size: 10 },
                         color: '#71717a',
-                        padding: 10
+                        padding: 8,
+                        maxTicksLimit: 6
                     },
                     title: {
                         display: true,
                         text: 'Percentage (%)',
-                        font: { family: "'Inter', sans-serif", size: 12, weight: '500' },
+                        font: { family: "'Inter', sans-serif", size: 11, weight: '500' },
                         color: '#a1a1aa',
-                        padding: { bottom: 10 }
+                        padding: { bottom: 8 }
                     }
                 },
                 x: {
@@ -1065,16 +1079,17 @@ function renderBarChart() {
                     ticks: {
                         font: { family: "'Inter', sans-serif", size: 10 },
                         color: '#71717a',
-                        padding: 10,
+                        padding: 8,
                         maxRotation: 45,
-                        minRotation: 45
+                        minRotation: 45,
+                        maxTicksLimit: 10
                     },
                     title: {
                         display: true,
                         text: 'Country',
-                        font: { family: "'Inter', sans-serif", size: 12, weight: '500' },
+                        font: { family: "'Inter', sans-serif", size: 11, weight: '500' },
                         color: '#a1a1aa',
-                        padding: { top: 10 }
+                        padding: { top: 8 }
                     }
                 }
             }
@@ -1134,7 +1149,8 @@ function updateDoughnutChart() {
         },
         options: {
             responsive: true,
-            maintainAspectRatio: true,
+            maintainAspectRatio: false,
+            aspectRatio: 2,
             cutout: '65%',
             plugins: {
                 legend: {
@@ -1295,7 +1311,8 @@ function updateProjectionChart() {
         },
         options: {
             responsive: true,
-            maintainAspectRatio: true,
+            maintainAspectRatio: false,
+            aspectRatio: 2,
             interaction: {
                 mode: 'index',
                 intersect: false
@@ -1400,93 +1417,185 @@ function calculateLinearRegression(years, values, targetYear) {
     };
 }
 
-// Chart 5: Data Table - Transparency Layer
-function renderDataTable() {
-    const tableBody = document.getElementById('tableBody');
-    tableBody.innerHTML = '';
+// Chart 5: Internet Access vs Financial Inclusion Correlation (Scatter Plot)
+function renderCorrelationChart() {
+    const canvas = document.getElementById('correlationChart');
+    if (!canvas) return;
 
-    // Collect all data points
-    const tableData = [];
+    const ctx = canvas.getContext('2d');
+
+    // Destroy existing chart if it exists
+    if (charts.correlationChart) {
+        charts.correlationChart.destroy();
+    }
+
+    // Get latest data for each country (most recent year available)
+    const scatterData = [];
+    const opportunityCountries = []; // High internet, low financial inclusion
 
     countries.forEach(code => {
         const data = allData[code];
         const countryName = data.name || code;
 
-        // Get all years from available data
-        const allYears = new Set();
-        [data.bankAccount, data.mobileMoney, data.digitalPayments, data.internetAccess].forEach(dataset => {
-            if (dataset) {
-                dataset.forEach(d => allYears.add(d.year));
-            }
-        });
+        // Get latest values
+        const latestInternet = getLatestValue(code, 'internetAccess');
+        const latestBankAccount = getLatestValue(code, 'bankAccount');
 
-        [...allYears].sort().forEach(year => {
-            const bankAccount = (data.bankAccount || []).find(d => d.year === year);
-            const mobileMoney = (data.mobileMoney || []).find(d => d.year === year);
-            const digitalPayments = (data.digitalPayments || []).find(d => d.year === year);
-            const internetAccess = (data.internetAccess || []).find(d => d.year === year);
-
-            tableData.push({
+        if (latestInternet !== null && latestBankAccount !== null) {
+            scatterData.push({
+                x: latestInternet,
+                y: latestBankAccount,
                 country: countryName,
-                code: code,
-                year: year,
-                bankAccount: bankAccount ? bankAccount.value : null,
-                mobileMoney: mobileMoney ? mobileMoney.value : null,
-                digitalPayments: digitalPayments ? digitalPayments.value : null,
-                internetAccess: internetAccess ? internetAccess.value : null
+                code: code
             });
-        });
-    });
 
-    // Sort by country and year
-    tableData.sort((a, b) => {
-        if (a.country !== b.country) {
-            return a.country.localeCompare(b.country);
+            // Identify opportunity countries (high internet > 60%, low bank account < 50%)
+            if (latestInternet > 60 && latestBankAccount < 50) {
+                opportunityCountries.push({
+                    country: countryName,
+                    internet: latestInternet,
+                    bankAccount: latestBankAccount
+                });
+            }
         }
-        return b.year - a.year;
     });
 
-    // Render rows
-    tableData.forEach(row => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${row.country}</td>
-            <td>${row.year}</td>
-            <td>${row.bankAccount !== null ? row.bankAccount.toFixed(2) + '%' : 'N/A'}</td>
-            <td>${row.mobileMoney !== null ? row.mobileMoney.toFixed(2) + '%' : 'N/A'}</td>
-            <td>${row.digitalPayments !== null ? row.digitalPayments.toFixed(2) + '%' : 'N/A'}</td>
-            <td>${row.internetAccess !== null ? row.internetAccess.toFixed(2) + '%' : 'N/A'}</td>
-        `;
-        tableBody.appendChild(tr);
+    if (scatterData.length === 0) {
+        return;
+    }
+
+    // Calculate correlation coefficient
+    const n = scatterData.length;
+    const sumX = scatterData.reduce((sum, d) => sum + d.x, 0);
+    const sumY = scatterData.reduce((sum, d) => sum + d.y, 0);
+    const sumXY = scatterData.reduce((sum, d) => sum + d.x * d.y, 0);
+    const sumX2 = scatterData.reduce((sum, d) => sum + d.x * d.x, 0);
+    const sumY2 = scatterData.reduce((sum, d) => sum + d.y * d.y, 0);
+
+    const correlation = (n * sumXY - sumX * sumY) /
+        Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
+
+    // Create datasets with different colors for opportunity countries
+    const regularData = scatterData.filter(d => !(d.x > 60 && d.y < 50));
+    const opportunityData = scatterData.filter(d => d.x > 60 && d.y < 50);
+
+    charts.correlationChart = new Chart(ctx, {
+        type: 'scatter',
+        data: {
+            datasets: [
+                {
+                    label: 'Countries',
+                    data: regularData,
+                    backgroundColor: 'rgba(34, 211, 238, 0.6)',
+                    borderColor: 'rgba(34, 211, 238, 1)',
+                    pointRadius: 6,
+                    pointHoverRadius: 8,
+                    pointBorderWidth: 2,
+                    pointBorderColor: '#0a0a0b'
+                },
+                {
+                    label: 'High Internet, Low Financial Inclusion (Opportunities)',
+                    data: opportunityData,
+                    backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                    borderColor: 'rgba(239, 68, 68, 1)',
+                    pointRadius: 8,
+                    pointHoverRadius: 10,
+                    pointBorderWidth: 2,
+                    pointBorderColor: '#fff'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            aspectRatio: 2,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        color: '#fafafa',
+                        padding: 15,
+                        font: { family: "'Inter', sans-serif", size: 12 },
+                        usePointStyle: true,
+                        pointStyle: 'circle'
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(10, 10, 11, 0.98)',
+                    titleColor: '#fafafa',
+                    bodyColor: '#e4e4e7',
+                    borderColor: 'rgba(34, 211, 238, 0.2)',
+                    borderWidth: 1,
+                    padding: 12,
+                    callbacks: {
+                        title: function (context) {
+                            return context[0].raw.country || 'Unknown';
+                        },
+                        label: function (context) {
+                            return [
+                                `Internet Access: ${context.raw.x.toFixed(1)}%`,
+                                `Bank Account Ownership: ${context.raw.y.toFixed(1)}%`
+                            ];
+                        }
+                    }
+                },
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Internet Access (% of Population)',
+                        color: '#e4e4e7',
+                        font: { family: "'Inter', sans-serif", size: 13, weight: '600' }
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.05)',
+                        lineWidth: 1
+                    },
+                    ticks: {
+                        color: '#a1a1aa',
+                        font: { family: "'Inter', sans-serif", size: 11 },
+                        callback: function (value) {
+                            return value + '%';
+                        }
+                    },
+                    min: 0,
+                    max: 100
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Bank Account Ownership (% of Population)',
+                        color: '#e4e4e7',
+                        font: { family: "'Inter', sans-serif", size: 13, weight: '600' }
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.05)',
+                        lineWidth: 1
+                    },
+                    ticks: {
+                        color: '#a1a1aa',
+                        font: { family: "'Inter', sans-serif", size: 11 },
+                        callback: function (value) {
+                            return value + '%';
+                        }
+                    },
+                    min: 0,
+                    max: 100
+                }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'point'
+            }
+        }
     });
 
-    // Add search functionality
-    const searchInput = document.getElementById('table-search');
-    searchInput.addEventListener('input', (e) => {
-        const searchTerm = e.target.value.toLowerCase();
-        const rows = tableBody.querySelectorAll('tr');
-
-        rows.forEach(row => {
-            const text = row.textContent.toLowerCase();
-            row.style.display = text.includes(searchTerm) ? '' : 'none';
-        });
-    });
-
-    // Add sort functionality
-    let sortAscending = true;
-    document.getElementById('sort-btn').addEventListener('click', () => {
-        const rows = Array.from(tableBody.querySelectorAll('tr'));
-        rows.sort((a, b) => {
-            const countryA = a.cells[0].textContent;
-            const countryB = b.cells[0].textContent;
-            return sortAscending
-                ? countryA.localeCompare(countryB)
-                : countryB.localeCompare(countryA);
-        });
-
-        rows.forEach(row => tableBody.appendChild(row));
-        sortAscending = !sortAscending;
-    });
+    // Add correlation info to chart (optional subtitle)
+    console.log(`Correlation coefficient: ${correlation.toFixed(3)}`);
+    if (opportunityCountries.length > 0) {
+        console.log('Opportunity countries (high internet, low financial inclusion):', opportunityCountries);
+    }
 }
 
 // Retry button handler
@@ -1613,11 +1722,19 @@ function getCountryFlag(code) {
     return '';
 }
 
-function getLatestValue(code) {
-    const data = allData[code].digitalPayments || allData[code].bankAccount || [];
-    if (data.length === 0) return 0;
+function getLatestValue(code, indicatorType = null) {
+    let data = [];
+
+    if (indicatorType && allData[code] && allData[code][indicatorType]) {
+        data = allData[code][indicatorType];
+    } else {
+        // Fallback to digitalPayments or bankAccount if no indicator specified
+        data = allData[code].digitalPayments || allData[code].bankAccount || [];
+    }
+
+    if (data.length === 0) return null;
     const sorted = [...data].sort((a, b) => b.year - a.year);
-    return sorted[0].value || 0;
+    return sorted[0].value !== null && sorted[0].value !== undefined ? sorted[0].value : null;
 }
 
 function toggleCountrySelection(code, card) {
