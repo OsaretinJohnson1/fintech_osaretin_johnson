@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0a0a0b">
+    <meta name="description" content="Visualizing how digital finance and open banking enabling factors support financial inclusion across countries.">
+    <title>Data Explorer - Open Banking Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">Dashboard</h2>
+            <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="index.html" class="nav-item">
+                <span class="nav-label">Overview</span>
+            </a>
+            <a href="analysis.html" class="nav-item">
+                <span class="nav-label">Country Analysis</span>
+            </a>
+            <a href="simulator.html" class="nav-item">
+                <span class="nav-label">Simulator</span>
+            </a>
+            <a href="data.html" class="nav-item active">
+                <span class="nav-label">Data</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Sidebar Backdrop (Mobile) -->
+    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+    <!-- Main Content Area -->
+    <div class="main-wrapper">
+        <header>
+            <div class="header-content">
+                <div class="header-left">
+                    <h1>Open Banking</h1>
+                </div>
+            </div>
+        </header>
+
+        <main>
+        <!-- Loading State -->
+        <div id="loading" class="loading-container">
+            <div class="spinner"></div>
+            <p>Loading data...</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="error" class="error-container" style="display: none;">
+            <p>Unable to fetch data</p>
+            <button id="retry-btn" class="retry-button">Retry</button>
+        </div>
+
+        <!-- Data Explorer Page Content -->
+        <div class="data-page">
+            <div class="data-page-header">
+                <h1 class="data-page-title">Financial Inclusion Data Explorer</h1>
+                <p class="data-page-description">
+                    Financial inclusion indicators from the World Bank Open Data API (2010-2023). 
+                    Data includes bank account ownership, mobile money adoption, digital payment usage, 
+                    and internet access across 26 countries. Values represent percentages of the population.
+                </p>                       
+            </div>
+            <div class="data-page-controls">
+                <input type="text" id="table-search-data" placeholder="Search countries..." class="search-input">
+                <button id="sort-btn-data" class="sort-button">Sort by Country</button>
+            </div>
+            <div class="data-page-table-wrapper">
+                <table id="dataTable-data">
+                    <thead>
+                        <tr>
+                            <th>Country</th>
+                            <th>Year</th>
+                            <th>Bank Account %</th>
+                            <th>Mobile Money %</th>
+                            <th>Digital Payments %</th>
+                            <th>Internet Access %</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody-data">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        </main>
+
+        <footer>
+            <p>Data Source: <a href="https://data.worldbank.org/" target="_blank">World Bank Open Data API</a></p>
+            <p>Project by Osaretin Johnson</p>
+        </footer>
+    </div>
+
+
+    <script src="script.js"></script>
+    <script>
+        // Page-specific initialization for Data page
+        document.addEventListener('DOMContentLoaded', async () => {
+            initializeSidebar();
+            await loadData();
+            initializeDataView();
+        });
+    </script>
+</body>
+</html>
+

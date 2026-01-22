@@ -20,21 +20,57 @@ let allData = {};
 let countries = [];
 let charts = {};
 
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', async () => {
-    await loadData();
-});
+// Initialize sidebar navigation (mobile menu only)
+function initializeSidebar() {
+    // Mobile menu toggle
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    const sidebar = document.getElementById('sidebar');
+    const backdrop = document.getElementById('sidebar-backdrop');
+
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', () => {
+            toggleSidebar();
+        });
+    }
+
+    if (backdrop) {
+        backdrop.addEventListener('click', () => {
+            closeSidebar();
+        });
+    }
+}
+
+// Toggle sidebar (mobile)
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const backdrop = document.getElementById('sidebar-backdrop');
+
+    if (sidebar && backdrop) {
+        sidebar.classList.toggle('open');
+        backdrop.classList.toggle('active');
+    }
+}
+
+// Close sidebar (mobile)
+function closeSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const backdrop = document.getElementById('sidebar-backdrop');
+
+    if (sidebar && backdrop) {
+        sidebar.classList.remove('open');
+        backdrop.classList.remove('active');
+    }
+}
+
 
 // Load data from World Bank API
 async function loadData() {
     const loadingEl = document.getElementById('loading');
     const errorEl = document.getElementById('error');
-    const dashboardEl = document.getElementById('dashboard');
 
     try {
         loadingEl.style.display = 'flex';
         errorEl.style.display = 'none';
-        dashboardEl.style.display = 'none';
 
         // Get list of countries (using common country codes)
         // Mix of developed and developing countries for better data coverage
@@ -83,11 +119,7 @@ async function loadData() {
         // Populate selectors
         populateSelectors();
 
-        // Render all charts
-        renderAllCharts();
-
         loadingEl.style.display = 'none';
-        dashboardEl.style.display = 'grid';
     } catch (error) {
         console.error('Error loading data:', error);
         loadingEl.style.display = 'none';
@@ -252,6 +284,422 @@ function renderAllCharts() {
     updateDoughnutChart();
     updateProjectionChart();
     renderDataTable();
+}
+
+// Initialize analysis view charts
+function initializeAnalysisCharts() {
+    // Check if charts already exist, if not create them
+    const doughnutCanvas = document.getElementById('doughnutChart-analysis');
+    const projectionCanvas = document.getElementById('projectionChart-analysis');
+
+    if (doughnutCanvas && !charts.doughnutChartAnalysis) {
+        // Create doughnut chart for analysis view
+        const ctx = doughnutCanvas.getContext('2d');
+        const firstCountry = countries[0];
+        const countryData = allData[firstCountry];
+
+        if (countryData) {
+            const bankAccount = getLatestValue(firstCountry, 'bankAccount');
+            const mobileMoney = getLatestValue(firstCountry, 'mobileMoney');
+            const digitalPayments = getLatestValue(firstCountry, 'digitalPayments');
+
+            const total = bankAccount + mobileMoney + digitalPayments;
+            const bankPercent = total > 0 ? (bankAccount / total) * 100 : 0;
+            const mobilePercent = total > 0 ? (mobileMoney / total) * 100 : 0;
+            const digitalPercent = total > 0 ? (digitalPayments / total) * 100 : 0;
+
+            charts.doughnutChartAnalysis = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Bank Accounts', 'Mobile Money', 'Digital Payments'],
+                    datasets: [{
+                        data: [bankPercent, mobilePercent, digitalPercent],
+                        backgroundColor: [
+                            'rgba(34, 211, 238, 0.8)',
+                            'rgba(167, 139, 250, 0.8)',
+                            'rgba(52, 211, 153, 0.8)'
+                        ],
+                        borderColor: 'transparent',
+                        borderWidth: 0,
+                        hoverBorderColor: 'transparent',
+                        hoverBorderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#fafafa',
+                                padding: 15,
+                                font: { family: "'Inter', sans-serif", size: 12 }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(10, 10, 11, 0.98)',
+                            titleColor: '#fafafa',
+                            bodyColor: '#e4e4e7',
+                            borderColor: 'rgba(34, 211, 238, 0.2)',
+                            borderWidth: 1,
+                            padding: 12,
+                            callbacks: {
+                                label: function (context) {
+                                    return context.label + ': ' + context.parsed.toFixed(1) + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Populate country selector
+        const selector = document.getElementById('doughnut-country-select-analysis');
+        if (selector) {
+            selector.innerHTML = '';
+            countries.forEach(code => {
+                const option = document.createElement('option');
+                option.value = code;
+                option.textContent = allData[code].name || code;
+                selector.appendChild(option);
+            });
+
+            selector.addEventListener('change', (e) => {
+                updateDoughnutChartAnalysis(e.target.value);
+            });
+        }
+    }
+
+    if (projectionCanvas && !charts.projectionChartAnalysis) {
+        // Create projection chart for analysis view
+        const ctx = projectionCanvas.getContext('2d');
+        const firstCountry = countries[0];
+        const targetYear = 2030;
+
+        charts.projectionChartAnalysis = createProjectionChartForAnalysis(ctx, firstCountry, targetYear);
+
+        // Populate country selector
+        const countrySelector = document.getElementById('projection-country-select-analysis');
+        const yearSelector = document.getElementById('projection-year-select-analysis');
+
+        if (countrySelector) {
+            countrySelector.innerHTML = '';
+            countries.forEach(code => {
+                const option = document.createElement('option');
+                option.value = code;
+                option.textContent = allData[code].name || code;
+                countrySelector.appendChild(option);
+            });
+
+            countrySelector.addEventListener('change', (e) => {
+                const year = parseInt(yearSelector.value);
+                updateProjectionChartAnalysis(e.target.value, year);
+            });
+        }
+
+        if (yearSelector) {
+            yearSelector.addEventListener('change', (e) => {
+                const country = countrySelector.value;
+                const year = parseInt(e.target.value);
+                updateProjectionChartAnalysis(country, year);
+            });
+        }
+    }
+}
+
+// Create projection chart for analysis view
+function createProjectionChartForAnalysis(ctx, countryCode, targetYear) {
+    const data = allData[countryCode];
+    if (!data) return null;
+
+    // Use digital payments or bank account data
+    const sourceData = data.digitalPayments || data.bankAccount || [];
+
+    if (sourceData.length < 2) {
+        return null;
+    }
+
+    // Sort by year
+    const sortedData = [...sourceData].sort((a, b) => a.year - b.year);
+    const years = sortedData.map(d => d.year);
+    const values = sortedData.map(d => d.value);
+
+    // Calculate linear regression for projection
+    const projection = calculateLinearRegression(years, values, targetYear);
+
+    // Combine historical and projected data
+    const historicalYears = years;
+    const historicalValues = values;
+    const projectedYears = [years[years.length - 1], targetYear];
+    const projectedValues = [values[values.length - 1], projection.projectedValue];
+
+    // Prepare data for chart
+    const historicalData = historicalYears.map((year, idx) => ({
+        x: year,
+        y: historicalValues[idx]
+    }));
+
+    const projectedData = projectedYears.map((year, idx) => ({
+        x: year,
+        y: projectedValues[idx]
+    }));
+
+    // Create gradient fill for historical data
+    const historicalGradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
+    historicalGradient.addColorStop(0, 'rgba(34, 211, 238, 0.2)');
+    historicalGradient.addColorStop(1, 'rgba(34, 211, 238, 0)');
+
+    // Create gradient for projected data
+    const projectedGradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
+    projectedGradient.addColorStop(0, 'rgba(167, 139, 250, 0.2)');
+    projectedGradient.addColorStop(1, 'rgba(167, 139, 250, 0)');
+
+    return new Chart(ctx, {
+        type: 'line',
+        data: {
+            datasets: [
+                {
+                    label: 'Historical Data',
+                    data: historicalData,
+                    borderColor: '#22d3ee',
+                    backgroundColor: historicalGradient,
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: '#22d3ee',
+                    pointBorderColor: '#0a0a0b',
+                    pointBorderWidth: 2
+                },
+                {
+                    label: 'Projected',
+                    data: projectedData,
+                    borderColor: '#a78bfa',
+                    backgroundColor: projectedGradient,
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    pointBackgroundColor: '#a78bfa',
+                    pointBorderColor: '#0a0a0b',
+                    pointBorderWidth: 2
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            interaction: {
+                mode: 'index',
+                intersect: false
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 20,
+                        font: { family: "'Inter', sans-serif", size: 12, weight: '500' },
+                        color: '#fafafa'
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(10, 10, 11, 0.98)',
+                    titleColor: '#fafafa',
+                    bodyColor: '#e4e4e7',
+                    borderColor: 'rgba(34, 211, 238, 0.2)',
+                    borderWidth: 1,
+                    padding: 16,
+                    cornerRadius: 12,
+                    callbacks: {
+                        label: function (context) {
+                            return context.dataset.label + ': ' + context.parsed.y.toFixed(1) + '%';
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    type: 'linear',
+                    position: 'bottom',
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.05)',
+                        drawBorder: false
+                    },
+                    ticks: {
+                        font: { family: "'JetBrains Mono', monospace", size: 11 },
+                        color: '#71717a',
+                        padding: 10
+                    },
+                    title: {
+                        display: true,
+                        text: 'Year',
+                        font: { family: "'Inter', sans-serif", size: 12, weight: '500' },
+                        color: '#a1a1aa',
+                        padding: { top: 10 }
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.05)',
+                        drawBorder: false
+                    },
+                    ticks: {
+                        font: { family: "'JetBrains Mono', monospace", size: 11 },
+                        color: '#71717a',
+                        padding: 10
+                    },
+                    title: {
+                        display: true,
+                        text: 'Percentage (%)',
+                        font: { family: "'Inter', sans-serif", size: 12, weight: '500' },
+                        color: '#a1a1aa',
+                        padding: { bottom: 10 }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Update doughnut chart in analysis view
+function updateDoughnutChartAnalysis(countryCode) {
+    if (!charts.doughnutChartAnalysis) return;
+
+    const countryData = allData[countryCode];
+    if (!countryData) return;
+
+    const bankAccount = getLatestValue(countryCode, 'bankAccount');
+    const mobileMoney = getLatestValue(countryCode, 'mobileMoney');
+    const digitalPayments = getLatestValue(countryCode, 'digitalPayments');
+
+    const total = bankAccount + mobileMoney + digitalPayments;
+    const bankPercent = total > 0 ? (bankAccount / total) * 100 : 0;
+    const mobilePercent = total > 0 ? (mobileMoney / total) * 100 : 0;
+    const digitalPercent = total > 0 ? (digitalPayments / total) * 100 : 0;
+
+    charts.doughnutChartAnalysis.data.datasets[0].data = [bankPercent, mobilePercent, digitalPercent];
+    charts.doughnutChartAnalysis.update();
+}
+
+// Update projection chart in analysis view
+function updateProjectionChartAnalysis(countryCode, targetYear) {
+    const ctx = document.getElementById('projectionChart-analysis').getContext('2d');
+    if (charts.projectionChartAnalysis) {
+        charts.projectionChartAnalysis.destroy();
+    }
+    charts.projectionChartAnalysis = createProjectionChartForAnalysis(ctx, countryCode, targetYear);
+}
+
+// Initialize data view
+function initializeDataView() {
+    // Render data table for data view
+    const tableBody = document.getElementById('tableBody-data');
+    if (tableBody && tableBody.children.length === 0) {
+        renderDataTableForDataView();
+    }
+
+    // Set up search and sort for data view
+    const searchInput = document.getElementById('table-search-data');
+    const sortBtn = document.getElementById('sort-btn-data');
+
+    if (searchInput && tableBody) {
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = tableBody.querySelectorAll('tr');
+
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        });
+    }
+
+    if (sortBtn && tableBody) {
+        let sortAscending = true;
+        sortBtn.addEventListener('click', () => {
+            const rows = Array.from(tableBody.querySelectorAll('tr'));
+            rows.sort((a, b) => {
+                const countryA = a.cells[0].textContent;
+                const countryB = b.cells[0].textContent;
+                return sortAscending
+                    ? countryA.localeCompare(countryB)
+                    : countryB.localeCompare(countryA);
+            });
+
+            sortAscending = !sortAscending;
+            rows.forEach(row => tableBody.appendChild(row));
+        });
+    }
+}
+
+// Render data table for data view
+function renderDataTableForDataView() {
+    const tableBody = document.getElementById('tableBody-data');
+    if (!tableBody) return;
+
+    tableBody.innerHTML = '';
+
+    // Collect all data points
+    const tableData = [];
+
+    countries.forEach(code => {
+        const data = allData[code];
+        const countryName = data.name || code;
+
+        // Get all years from available data
+        const allYears = new Set();
+        [data.bankAccount, data.mobileMoney, data.digitalPayments, data.internetAccess].forEach(dataset => {
+            if (dataset) {
+                dataset.forEach(d => allYears.add(d.year));
+            }
+        });
+
+        [...allYears].sort().forEach(year => {
+            const bankAccount = (data.bankAccount || []).find(d => d.year === year);
+            const mobileMoney = (data.mobileMoney || []).find(d => d.year === year);
+            const digitalPayments = (data.digitalPayments || []).find(d => d.year === year);
+            const internetAccess = (data.internetAccess || []).find(d => d.year === year);
+
+            tableData.push({
+                country: countryName,
+                code: code,
+                year: year,
+                bankAccount: bankAccount ? bankAccount.value : null,
+                mobileMoney: mobileMoney ? mobileMoney.value : null,
+                digitalPayments: digitalPayments ? digitalPayments.value : null,
+                internetAccess: internetAccess ? internetAccess.value : null
+            });
+        });
+    });
+
+    // Sort by country, then year
+    tableData.sort((a, b) => {
+        if (a.country !== b.country) {
+            return a.country.localeCompare(b.country);
+        }
+        return a.year - b.year;
+    });
+
+    // Render rows
+    tableData.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${row.country}</td>
+            <td>${row.year}</td>
+            <td>${row.bankAccount !== null ? row.bankAccount.toFixed(1) : 'N/A'}</td>
+            <td>${row.mobileMoney !== null ? row.mobileMoney.toFixed(1) : 'N/A'}</td>
+            <td>${row.digitalPayments !== null ? row.digitalPayments.toFixed(1) : 'N/A'}</td>
+            <td>${row.internetAccess !== null ? row.internetAccess.toFixed(1) : 'N/A'}</td>
+        `;
+        tableBody.appendChild(tr);
+    });
 }
 
 // Glowing neon color palette for dark theme
@@ -989,12 +1437,8 @@ const RACE_COLORS = [
 ];
 
 // Modal controls
-document.getElementById('launch-race').addEventListener('click', () => {
-    document.getElementById('race-modal').style.display = 'flex';
-    initializeRaceSetup();
-});
-
-document.getElementById('close-race').addEventListener('click', closeRaceModal);
+// Race simulator no longer uses modal - navigation handled by sidebar
+// Remove launch-race button event listener (button removed from HTML)
 
 // Help panel controls
 document.getElementById('race-help').addEventListener('click', () => {
@@ -1052,9 +1496,7 @@ document.getElementById('new-race').addEventListener('click', resetRace);
 
 document.getElementById('share-race').addEventListener('click', shareRaceResults);
 
-function closeRaceModal() {
-    document.getElementById('race-modal').style.display = 'none';
-}
+// Race modal no longer needed - removed
 
 function initializeRaceSetup() {
     raceState.selectedCountries = [];

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0a0a0b">
+    <meta name="description" content="Visualizing how digital finance and open banking enabling factors support financial inclusion across countries.">
+    <title>Country Analysis - Open Banking Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">Dashboard</h2>
+            <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="index.html" class="nav-item">
+                <span class="nav-label">Overview</span>
+            </a>
+            <a href="analysis.html" class="nav-item active">
+                <span class="nav-label">Country Analysis</span>
+            </a>
+            <a href="simulator.html" class="nav-item">
+                <span class="nav-label">Simulator</span>
+            </a>
+            <a href="data.html" class="nav-item">
+                <span class="nav-label">Data</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Sidebar Backdrop (Mobile) -->
+    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+    <!-- Main Content Area -->
+    <div class="main-wrapper">
+        <header>
+            <div class="header-content">
+                <div class="header-left">
+                    <h1>Open Banking</h1>
+                </div>
+            </div>
+        </header>
+
+        <main>
+        <!-- Loading State -->
+        <div id="loading" class="loading-container">
+            <div class="spinner"></div>
+            <p>Loading data...</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="error" class="error-container" style="display: none;">
+            <p>Unable to fetch data</p>
+            <button id="retry-btn" class="retry-button">Retry</button>
+        </div>
+
+        <!-- Country Analysis Page Content -->
+        <h2 class="content-heading">Financial Inclusion & Cashless Future Analytics</h2>
+        <div class="dashboard">
+            <!-- Doughnut Chart - Cash vs Digital Banking -->
+            <section class="chart-container">
+                <h2>Cash vs Digital Banking</h2>
+                <p class="chart-description">Mobile money vs traditional banking usage. Highlights how countries are shifting toward cashless, API-driven financial systems.</p>
+                <div class="doughnut-controls">
+                    <div class="control-group">
+                        <label for="doughnut-country-select-analysis">Select Country:</label>
+                        <select id="doughnut-country-select-analysis"></select>
+                    </div>
+                </div>
+                <canvas id="doughnutChart-analysis"></canvas>
+            </section>
+
+            <!-- Projection Line Chart - Cashless Future Simulator -->
+            <section class="chart-container projection-container">
+                <h2>Cashless Future Simulator</h2>
+                <p class="chart-description">Projected growth of digital payments based on historical trends. Transforms static data into a future-facing fintech simulation.</p>
+                <div class="projection-controls">
+                    <div class="control-group">
+                        <label for="projection-country-select-analysis">Select Country:</label>
+                        <select id="projection-country-select-analysis"></select>
+                    </div>
+                    <div class="control-group">
+                        <label for="projection-year-select-analysis">Select Future Year:</label>
+                        <select id="projection-year-select-analysis">
+                            <option value="2025">2025</option>
+                            <option value="2026">2026</option>
+                            <option value="2027">2027</option>
+                            <option value="2028">2028</option>
+                            <option value="2029">2029</option>
+                            <option value="2030">2030</option>
+                            <option value="2031">2031</option>
+                            <option value="2032">2032</option>
+                            <option value="2033">2033</option>
+                            <option value="2034">2034</option>
+                            <option value="2035">2035</option>
+                        </select>
+                    </div>
+                </div>
+                <canvas id="projectionChart-analysis"></canvas>
+            </section>
+        </div>
+        </main>
+
+        <footer>
+            <p>Data Source: <a href="https://data.worldbank.org/" target="_blank">World Bank Open Data API</a></p>
+            <p>Project by Osaretin Johnson</p>
+        </footer>
+    </div>
+
+
+    <script src="script.js"></script>
+    <script>
+        // Page-specific initialization for Analysis page
+        document.addEventListener('DOMContentLoaded', async () => {
+            initializeSidebar();
+            await loadData();
+            initializeAnalysisCharts();
+        });
+    </script>
+</body>
+</html>
+

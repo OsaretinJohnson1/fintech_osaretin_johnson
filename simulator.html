@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0a0a0b">
+    <meta name="description" content="Visualizing how digital finance and open banking enabling factors support financial inclusion across countries.">
+    <title>Simulator - Open Banking Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">Dashboard</h2>
+            <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="index.html" class="nav-item">
+                <span class="nav-label">Overview</span>
+            </a>
+            <a href="analysis.html" class="nav-item">
+                <span class="nav-label">Country Analysis</span>
+            </a>
+            <a href="simulator.html" class="nav-item active">
+                <span class="nav-label">Simulator</span>
+            </a>
+            <a href="data.html" class="nav-item">
+                <span class="nav-label">Data</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Sidebar Backdrop (Mobile) -->
+    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+    <!-- Main Content Area -->
+    <div class="main-wrapper">
+        <header>
+            <div class="header-content">
+                <div class="header-left">
+                    <h1>Open Banking</h1>
+                </div>
+            </div>
+        </header>
+
+        <main>
+        <!-- Loading State -->
+        <div id="loading" class="loading-container">
+            <div class="spinner"></div>
+            <p>Loading data...</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="error" class="error-container" style="display: none;">
+            <p>Unable to fetch data</p>
+            <button id="retry-btn" class="retry-button">Retry</button>
+        </div>
+
+        <!-- Simulator Page Content -->
+        <div class="simulator-view">
+            <div class="simulator-header">
+                <h2>Country Race to Cashless Future</h2>
+                <p>Select countries, set policies, and watch them race to digital adoption!</p>
+                <button class="help-button" id="race-help">How It Works</button>
+            </div>
+
+            <!-- Help Panel -->
+            <div id="race-help-panel" class="help-panel hidden">
+                <h4>Understanding the Race</h4>
+                <div class="help-content">
+                    <div class="help-section">
+                        <h5>Data Source</h5>
+                        <p>Projections based on World Bank financial inclusion data and historical adoption trends.</p>
+                    </div>
+                    <div class="help-section">
+                        <h5>Budget Allocation</h5>
+                        <p>$100M represents significant national investment (like Kenya's $50M M-Pesa program over 5 years).</p>
+                    </div>
+                    <div class="help-section">
+                        <h5>Policy Impact</h5>
+                        <p>Each policy accelerates adoption differently. Balanced approaches usually win!</p>
+                    </div>
+                </div>
+                <button class="btn-secondary small" id="close-help">Got it</button>
+            </div>
+
+            <!-- Setup Phase -->
+            <div id="race-setup" class="race-setup">
+                <div class="setup-section">
+                    <h3>Select Racing Countries (2-4)</h3>
+                    <div class="country-selector-grid" id="country-selector">
+                        <!-- Will be populated dynamically -->
+                    </div>
+                </div>
+
+                <div class="setup-section">
+                    <h3>Race Settings</h3>
+                    <div class="race-settings">
+                        <div class="setting-item">
+                            <label for="race-target">Target Adoption %:</label>
+                            <input type="number" id="race-target" min="50" max="100" value="80" step="5">
+                        </div>
+                        <div class="setting-item">
+                            <label for="race-year">Target Year:</label>
+                            <select id="race-year">
+                                <option value="2027">2027</option>
+                                <option value="2028">2028</option>
+                                <option value="2029">2029</option>
+                                <option value="2030" selected>2030</option>
+                                <option value="2031">2031</option>
+                                <option value="2032">2032</option>
+                                <option value="2035">2035</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn-primary btn-large" id="start-policies">
+                    Set Policies for Countries
+                </button>
+            </div>
+
+            <!-- Policy Phase -->
+            <div id="race-policies" class="race-policies hidden">
+                <div class="policy-header">
+                    <h3>Set Policies for Each Country
+                        <span class="help-icon" data-tooltip="Each policy area accelerates digital adoption differently. Hover sliders for details">Info</span>
+                    </h3>
+                    <p>Allocate $100M budget per country across four policy areas</p>
+
+                    <div class="budget-explanation">
+                        <small class="budget-context">
+                            <strong>Why $100M?</strong> This represents a significant national investment level.
+                            Countries like Kenya invested ~$50M in M-Pesa over 5 years.
+                            Your allocation determines policy focus and growth acceleration.
+                        </small>
+                    </div>
+                </div>
+                
+                <div id="policy-countries" class="policy-grid">
+                    <!-- Will be populated for each selected country -->
+                </div>
+
+                <div class="policy-actions">
+                    <button class="btn-secondary" id="back-to-setup">← Back</button>
+                    <button class="btn-success btn-large" id="start-race">
+                        Start Race!
+                    </button>
+                </div>
+            </div>
+
+            <!-- Race Animation Phase -->
+            <div id="race-animation" class="race-animation hidden">
+                <div class="race-track-container">
+                    <div class="race-info-panel">
+                        <div class="race-info">
+                            <div class="info-item">
+                                <span class="info-label">Year:</span>
+                                <span class="info-value" id="current-race-year">2024</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Target:</span>
+                                <span class="info-value" id="race-target-display">80%</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Total Invested:</span>
+                                <span class="info-value" id="total-invested">$400M</span>
+                            </div>
+                        </div>
+
+                        <div class="race-explanation">
+                            <button class="help-toggle" id="race-explanation-toggle">What's Happening?</button>
+                            <div class="explanation-panel hidden" id="race-explanation">
+                                <p><strong>Real-time Simulation:</strong> Each country's progress is calculated using their policy allocations and historical World Bank data trends.</p>
+                                <p><strong>Growth Rates:</strong> Fintech investments accelerate adoption faster than education programs, but balanced approaches win races.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="race-tracks" class="race-tracks">
+                        <!-- Racing lanes will be generated here -->
+                    </div>
+                </div>
+
+                <div class="race-controls">
+                    <button class="btn-secondary" id="skip-race">Skip to Results</button>
+                </div>
+            </div>
+
+            <!-- Results Phase -->
+            <div id="race-results" class="race-results hidden">
+                <div class="results-header">
+                    <div class="winner-announcement">
+                        <h2><span id="winner-name">Winner</span> Wins!</h2>
+                        <p>Reached <span id="winner-percent">80</span>% adoption first!</p>
+                    </div>
+                </div>
+
+                <div class="results-grid" id="results-leaderboard">
+                    <!-- Leaderboard will be populated here -->
+                </div>
+
+                <div class="results-actions">
+                    <button class="btn-info" id="show-reality-check">
+                        Reality Check - Compare to Actual Data
+                    </button>
+                    <button class="btn-secondary" id="new-race">
+                        New Race
+                    </button>
+                    <button class="btn-success" id="share-race">
+                        Share Results
+                    </button>
+                </div>
+
+                <!-- Reality Check Panel -->
+                <div id="reality-check-panel" class="reality-check-panel hidden">
+                    <h3>Reality Check: How Realistic Are These Results?</h3>
+                    
+                    <div class="reality-intro">
+                        <p>Let's compare your race results to actual baseline projections from World Bank data...</p>
+                    </div>
+
+                    <div id="reality-comparisons" class="reality-grid">
+                        <!-- Reality comparisons will be populated here -->
+                    </div>
+
+                    <div class="reality-insights">
+                        <h4>Key Insights</h4>
+                        <ul id="reality-insights-list">
+                            <!-- Insights will be added here -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </main>
+
+        <footer>
+            <p>Data Source: <a href="https://data.worldbank.org/" target="_blank">World Bank Open Data API</a></p>
+            <p>Project by Osaretin Johnson</p>
+        </footer>
+    </div>
+
+
+    <script src="script.js"></script>
+    <script>
+        // Page-specific initialization for Simulator page
+        document.addEventListener('DOMContentLoaded', async () => {
+            initializeSidebar();
+            await loadData();
+            initializeRaceSetup();
+        });
+    </script>
+</body>
+</html>
+

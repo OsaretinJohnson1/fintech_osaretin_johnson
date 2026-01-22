@@ -91,6 +91,8 @@ body {
     background: var(--bg-primary);
     min-height: 100vh;
     overflow-x: hidden;
+    display: flex;
+    flex-direction: row;
 }
 
 /* Animated background grid */
@@ -143,88 +145,257 @@ body::after {
    Header
    =========================== */
 header {
-    position: relative;
-    padding: var(--space-3xl) var(--space-xl);
-    text-align: center;
-    border-bottom: 1px solid var(--border-subtle);
-    background: linear-gradient(180deg, rgba(17, 17, 19, 0.9) 0%, rgba(10, 10, 11, 0.95) 100%);
-    z-index: 1;
+    position: fixed;
+    top: 0;
+    left: 280px;
+    right: 0;
+    padding: var(--space-xl) var(--space-lg);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(10, 10, 11, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    z-index: 50;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
-/* Decorative orbs */
-header::before {
-    content: '';
-    position: absolute;
-    top: 20%;
-    left: 10%;
-    width: 300px;
-    height: 300px;
-    background: radial-gradient(circle, rgba(34, 211, 238, 0.12) 0%, transparent 70%);
-    filter: blur(60px);
-    pointer-events: none;
-    animation: pulse 6s ease-in-out infinite;
+.header-content {
+    max-width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-lg);
 }
 
-header::after {
-    content: '';
-    position: absolute;
-    bottom: 10%;
-    right: 10%;
-    width: 250px;
-    height: 250px;
-    background: radial-gradient(circle, rgba(167, 139, 250, 0.1) 0%, transparent 70%);
-    filter: blur(50px);
-    pointer-events: none;
-    animation: pulse 6s ease-in-out infinite reverse;
-}
-
-@keyframes pulse {
-
-    0%,
-    100% {
-        opacity: 0.6;
-        transform: scale(1);
-    }
-
-    50% {
-        opacity: 1;
-        transform: scale(1.1);
-    }
-}
-
-header>* {
-    position: relative;
-    z-index: 1;
+.header-left {
+    flex: 1;
+    min-width: 0;
 }
 
 header h1 {
-    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-size: 1.25rem;
     font-weight: 700;
-    letter-spacing: -0.03em;
-    line-height: 1.1;
-    margin-bottom: var(--space-md);
     background: var(--gradient-primary);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    text-wrap: balance;
+    margin: 0;
 }
 
-.subtitle {
-    font-size: clamp(1rem, 2.5vw, 1.35rem);
-    font-weight: 500;
-    color: var(--text-secondary);
-    margin-bottom: var(--space-lg);
-    text-wrap: balance;
-}
-
-.narrative {
-    max-width: 720px;
-    margin: 0 auto;
-    font-size: 0.95rem;
+.header-subtitle {
+    font-size: 0.875rem;
     color: var(--text-muted);
-    line-height: 1.8;
-    text-wrap: pretty;
+    margin: 0;
+    font-weight: 400;
+}
+
+
+/* Remove old subtitle and narrative styles */
+.subtitle,
+.narrative {
+    display: none;
+}
+
+/* ===========================
+   Sidebar Navigation
+   =========================== */
+.sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 280px;
+    height: 100vh;
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border-subtle);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    transition: transform var(--transition-base);
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.sidebar-header {
+    padding: var(--space-xl) var(--space-lg);
+    border-bottom: 1px solid var(--border-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.sidebar-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0;
+}
+
+.sidebar-toggle {
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    width: 32px;
+    height: 32px;
+    justify-content: center;
+}
+
+.sidebar-toggle span {
+    width: 20px;
+    height: 2px;
+    background: var(--text-primary);
+    border-radius: 2px;
+    transition: all var(--transition-fast);
+}
+
+.sidebar-nav {
+    flex: 1;
+    padding: var(--space-lg) 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    padding: var(--space-md) var(--space-lg);
+    margin: 0 var(--space-md);
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    text-align: left;
+    position: relative;
+    width: 100%;
+    justify-content: flex-start;
+    text-decoration: none;
+}
+
+/* Support both button and anchor tags */
+.nav-item:is(a, button) {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    justify-content: flex-start;
+}
+
+.nav-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+}
+
+.nav-item.active {
+    background: rgba(34, 211, 238, 0.1);
+    color: var(--accent-primary);
+}
+
+.nav-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--accent-primary);
+    border-radius: 0 2px 2px 0;
+}
+
+.nav-label {
+    flex: 1;
+    display: block;
+}
+
+/* Sidebar Backdrop (Mobile) */
+.sidebar-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    z-index: 99;
+    opacity: 0;
+    transition: opacity var(--transition-base);
+}
+
+.sidebar-backdrop.active {
+    display: block;
+    opacity: 1;
+}
+
+/* Main Wrapper */
+.main-wrapper {
+    flex: 1;
+    margin-left: 280px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    transition: margin-left var(--transition-base);
+}
+
+/* View Management */
+.view {
+    display: none;
+    flex: 1;
+    width: 100%;
+}
+
+.view.active {
+    display: block;
+}
+
+/* Content Heading - appears above charts in each view */
+.content-heading {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin: var(--space-2xl) 0 var(--space-xl) 0;
+    padding: 0 var(--space-xl);
+    letter-spacing: -0.01em;
+}
+
+/* Remove content heading for data view - it has its own header */
+#view-data .content-heading {
+    display: none;
+}
+
+/* Simulator View */
+.simulator-view {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: var(--space-2xl) var(--space-xl);
+    width: 100%;
+}
+
+.simulator-header {
+    text-align: center;
+    margin-bottom: var(--space-2xl);
+}
+
+.simulator-header h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: var(--space-md);
+}
+
+.simulator-header p {
+    font-size: 1.125rem;
+    color: var(--text-muted);
+    margin-bottom: var(--space-lg);
 }
 
 /* ===========================
@@ -234,6 +405,8 @@ main {
     position: relative;
     z-index: 1;
     width: 100%;
+    flex: 1;
+    padding-top: 80px;
 }
 
 /* ===========================
@@ -454,6 +627,70 @@ main {
     grid-template-columns: 1fr;
     gap: var(--space-xl);
 }
+
+/* Data Page - Full page layout instead of card */
+.data-page {
+    width: 100%;
+    max-width: 100%;
+    padding: var(--space-2xl) var(--space-xl);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xl);
+    min-height: calc(100vh - 80px);
+}
+
+.data-page-header {
+    width: 100%;
+    padding-bottom: var(--space-lg);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.data-page-title {
+    font-size: 2rem;
+    font-weight: 700;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0 0 var(--space-md) 0;
+    letter-spacing: -0.02em;
+}
+
+.data-page-description {
+    font-size: 1rem;
+    color: var(--text-muted);
+    margin: 0 0 var(--space-lg) 0;
+    line-height: 1.6;
+    max-width: 800px;
+}
+
+
+
+.data-page-controls {
+    display: flex;
+    gap: var(--space-md);
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.data-page-table-wrapper {
+    width: 100%;
+    flex: 1;
+    overflow-x: auto;
+    overflow-y: auto;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-subtle);
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.data-page-table-wrapper table {
+    width: 100%;
+    min-width: 100%;
+    border-collapse: collapse;
+}
+
 
 /* ===========================
    Glassmorphic Cards
@@ -1055,7 +1292,8 @@ footer a:hover::after {
         justify-content: center;
     }
 
-    th, td {
+    th,
+    td {
         padding: 0.625rem 0.5rem;
         font-size: 0.7rem;
     }
@@ -1119,7 +1357,8 @@ footer a:hover::after {
         justify-content: center;
     }
 
-    th, td {
+    th,
+    td {
         padding: 0.75rem 0.625rem;
         font-size: 0.75rem;
     }
@@ -1237,7 +1476,8 @@ footer a:hover::after {
         min-width: auto;
     }
 
-    th, td {
+    th,
+    td {
         padding: 0.875rem 1rem;
         font-size: 0.8125rem;
     }
@@ -1248,7 +1488,8 @@ footer a:hover::after {
    =========================== */
 @media (min-width: 768px) and (max-width: 1023px) {
     header {
-        padding: var(--space-3xl) var(--space-2xl);
+        left: 0;
+        padding: var(--space-xl) var(--space-lg);
     }
 
     .dashboard {
@@ -1300,7 +1541,8 @@ footer a:hover::after {
         max-height: 450px;
     }
 
-    th, td {
+    th,
+    td {
         padding: 1rem 1.125rem;
     }
 }
@@ -1310,7 +1552,7 @@ footer a:hover::after {
    =========================== */
 @media (min-width: 1024px) and (max-width: 1279px) {
     header {
-        padding: 4rem 3rem;
+        padding: var(--space-xl) var(--space-lg);
     }
 
     .dashboard {
@@ -1373,7 +1615,7 @@ footer a:hover::after {
    =========================== */
 @media (min-width: 1280px) and (max-width: 1439px) {
     header {
-        padding: 4.5rem 3rem;
+        padding: var(--space-xl) var(--space-lg);
     }
 
     .dashboard {
@@ -1432,7 +1674,7 @@ footer a:hover::after {
    =========================== */
 @media (min-width: 1440px) and (max-width: 1919px) {
     header {
-        padding: 5rem 4rem;
+        padding: var(--space-xl) var(--space-lg);
     }
 
     .dashboard {
@@ -1485,7 +1727,8 @@ footer a:hover::after {
         overflow-y: auto;
     }
 
-    th, td {
+    th,
+    td {
         padding: 1.125rem 1.375rem;
     }
 }
@@ -1496,11 +1739,11 @@ footer a:hover::after {
    =========================== */
 @media (min-width: 1920px) {
     header {
-        padding: 5.5rem 5rem;
+        padding: var(--space-xl) var(--space-lg);
     }
 
     header h1 {
-        font-size: 4rem;
+        font-size: 1.25rem;
     }
 
     .subtitle {
@@ -1571,7 +1814,8 @@ footer a:hover::after {
         overflow-y: auto;
     }
 
-    th, td {
+    th,
+    td {
         padding: 1.25rem 1.5rem;
         font-size: 0.9375rem;
     }
@@ -1594,7 +1838,7 @@ footer a:hover::after {
     }
 
     header h1 {
-        font-size: 4.5rem;
+        font-size: 1.25rem;
     }
 
     .chart-container {
@@ -3699,5 +3943,77 @@ footer a:hover::after {
 
     .results-grid {
         grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+/* ===========================
+   Sidebar Responsive Styles
+   =========================== */
+
+/* Mobile: Sidebar hidden by default, hamburger menu */
+@media (max-width: 1023px) {
+    body {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        transform: translateX(-100%);
+        width: 280px;
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+    }
+
+    .sidebar-toggle {
+        display: flex;
+    }
+
+    .main-wrapper {
+        margin-left: 0;
+    }
+
+    header {
+        left: 0;
+    }
+
+    .sidebar-backdrop.active {
+        display: block;
+    }
+
+    .simulator-view {
+        padding: var(--space-lg) var(--space-md);
+    }
+
+    .simulator-header h2 {
+        font-size: 1.75rem;
+    }
+}
+
+/* Tablet: Sidebar can be toggled */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .sidebar {
+        width: 260px;
+    }
+}
+
+/* Small mobile */
+@media (max-width: 767px) {
+    .sidebar {
+        width: 100%;
+        max-width: 320px;
+    }
+
+    .nav-item {
+        padding: var(--space-lg) var(--space-xl);
+        font-size: 1rem;
+    }
+
+    .simulator-header h2 {
+        font-size: 1.5rem;
+    }
+
+    .simulator-header p {
+        font-size: 1rem;
     }
 }
