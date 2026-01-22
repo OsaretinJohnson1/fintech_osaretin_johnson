@@ -67,10 +67,18 @@ function closeSidebar() {
 async function loadData() {
     const loadingEl = document.getElementById('loading');
     const errorEl = document.getElementById('error');
+    const retryBtn = document.getElementById('retry-btn');
+
+    // Set up retry button if it exists
+    if (retryBtn) {
+        retryBtn.addEventListener('click', () => {
+            loadData();
+        });
+    }
 
     try {
-        loadingEl.style.display = 'flex';
-        errorEl.style.display = 'none';
+        if (loadingEl) loadingEl.style.display = 'flex';
+        if (errorEl) errorEl.style.display = 'none';
 
         // Get list of countries (using common country codes)
         // Mix of developed and developing countries for better data coverage
@@ -119,11 +127,11 @@ async function loadData() {
         // Populate selectors
         populateSelectors();
 
-        loadingEl.style.display = 'none';
+        if (loadingEl) loadingEl.style.display = 'none';
     } catch (error) {
         console.error('Error loading data:', error);
-        loadingEl.style.display = 'none';
-        errorEl.style.display = 'block';
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (errorEl) errorEl.style.display = 'block';
     }
 }
 
@@ -242,9 +250,6 @@ async function enrichCountryNames() {
 
 // Populate dropdown selectors
 function populateSelectors() {
-    const doughnutSelect = document.getElementById('doughnut-country-select');
-    const projectionSelect = document.getElementById('projection-country-select');
-
     // Sort countries by name
     const sortedCountries = [...countries].sort((a, b) => {
         const nameA = allData[a].name || a;
@@ -252,29 +257,83 @@ function populateSelectors() {
         return nameA.localeCompare(nameB);
     });
 
-    sortedCountries.forEach(code => {
-        const name = allData[code].name || code;
-        const option1 = document.createElement('option');
-        option1.value = code;
-        option1.textContent = name;
-        doughnutSelect.appendChild(option1);
-
-        const option2 = document.createElement('option');
-        option2.value = code;
-        option2.textContent = name;
-        projectionSelect.appendChild(option2);
-    });
-
-    // Set default selections
-    if (sortedCountries.length > 0) {
-        doughnutSelect.value = sortedCountries[0];
-        projectionSelect.value = sortedCountries[0];
+    // Populate doughnut country selector (overview page)
+    const doughnutSelect = document.getElementById('doughnut-country-select');
+    if (doughnutSelect) {
+        sortedCountries.forEach(code => {
+            const name = allData[code].name || code;
+            const option = document.createElement('option');
+            option.value = code;
+            option.textContent = name;
+            doughnutSelect.appendChild(option);
+        });
+        if (sortedCountries.length > 0) {
+            doughnutSelect.value = sortedCountries[0];
+        }
+        doughnutSelect.addEventListener('change', () => updateDoughnutChart());
     }
 
-    // Add event listeners
-    doughnutSelect.addEventListener('change', () => updateDoughnutChart());
-    projectionSelect.addEventListener('change', () => updateProjectionChart());
-    document.getElementById('projection-year-select').addEventListener('change', () => updateProjectionChart());
+    // Populate projection country selector (overview page)
+    const projectionSelect = document.getElementById('projection-country-select');
+    if (projectionSelect) {
+        sortedCountries.forEach(code => {
+            const name = allData[code].name || code;
+            const option = document.createElement('option');
+            option.value = code;
+            option.textContent = name;
+            projectionSelect.appendChild(option);
+        });
+        if (sortedCountries.length > 0) {
+            projectionSelect.value = sortedCountries[0];
+        }
+        projectionSelect.addEventListener('change', () => updateProjectionChart());
+
+        const projectionYearSelect = document.getElementById('projection-year-select');
+        if (projectionYearSelect) {
+            projectionYearSelect.addEventListener('change', () => updateProjectionChart());
+        }
+    }
+
+    // Populate analysis page selectors
+    const doughnutSelectAnalysis = document.getElementById('doughnut-country-select-analysis');
+    if (doughnutSelectAnalysis) {
+        sortedCountries.forEach(code => {
+            const name = allData[code].name || code;
+            const option = document.createElement('option');
+            option.value = code;
+            option.textContent = name;
+            doughnutSelectAnalysis.appendChild(option);
+        });
+        if (sortedCountries.length > 0) {
+            doughnutSelectAnalysis.value = sortedCountries[0];
+        }
+    }
+
+    const projectionSelectAnalysis = document.getElementById('projection-country-select-analysis');
+    if (projectionSelectAnalysis) {
+        sortedCountries.forEach(code => {
+            const name = allData[code].name || code;
+            const option = document.createElement('option');
+            option.value = code;
+            option.textContent = name;
+            projectionSelectAnalysis.appendChild(option);
+        });
+        if (sortedCountries.length > 0) {
+            projectionSelectAnalysis.value = sortedCountries[0];
+        }
+
+        // Add event listeners for analysis page
+        projectionSelectAnalysis.addEventListener('change', () => {
+            updateProjectionChart();
+        });
+
+        const projectionYearSelectAnalysis = document.getElementById('projection-year-select-analysis');
+        if (projectionYearSelectAnalysis) {
+            projectionYearSelectAnalysis.addEventListener('change', () => {
+                updateProjectionChart();
+            });
+        }
+    }
 }
 
 // Render all charts
@@ -1115,9 +1174,28 @@ function updateDoughnutChart() {
 
 // Chart 4: Projection Line Chart - Cashless Future Simulator
 function updateProjectionChart() {
-    const countryCode = document.getElementById('projection-country-select').value;
-    const targetYear = parseInt(document.getElementById('projection-year-select').value);
-    const ctx = document.getElementById('projectionChart').getContext('2d');
+    // Try overview page selectors first
+    let countrySelect = document.getElementById('projection-country-select');
+    let yearSelect = document.getElementById('projection-year-select');
+    let chartCanvas = document.getElementById('projectionChart');
+    let chartKey = 'projectionChart';
+
+    // If not found, try analysis page selectors
+    if (!countrySelect || !yearSelect || !chartCanvas) {
+        countrySelect = document.getElementById('projection-country-select-analysis');
+        yearSelect = document.getElementById('projection-year-select-analysis');
+        chartCanvas = document.getElementById('projectionChart-analysis');
+        chartKey = 'projectionChart-analysis';
+    }
+
+    // If still not found, elements don't exist on this page
+    if (!countrySelect || !yearSelect || !chartCanvas) {
+        return;
+    }
+
+    const countryCode = countrySelect.value;
+    const targetYear = parseInt(yearSelect.value);
+    const ctx = chartCanvas.getContext('2d');
     const data = allData[countryCode];
 
     // Use digital payments or bank account data
@@ -1149,8 +1227,8 @@ function updateProjectionChart() {
     const projectedYears = [years[years.length - 1], targetYear];
     const projectedValues = [values[values.length - 1], projection.projectedValue];
 
-    if (charts.projectionChart) {
-        charts.projectionChart.destroy();
+    if (charts[chartKey]) {
+        charts[chartKey].destroy();
     }
 
     // Prepare data for chart
@@ -1174,7 +1252,7 @@ function updateProjectionChart() {
     projGradient.addColorStop(0, 'rgba(52, 211, 153, 0.25)');
     projGradient.addColorStop(1, 'rgba(52, 211, 153, 0)');
 
-    charts.projectionChart = new Chart(ctx, {
+    charts[chartKey] = new Chart(ctx, {
         type: 'line',
         data: {
             datasets: [
@@ -1412,9 +1490,7 @@ function renderDataTable() {
 }
 
 // Retry button handler
-document.getElementById('retry-btn').addEventListener('click', () => {
-    loadData();
-});
+// Retry button handler is now set up in loadData() function
 
 // ===========================
 // Country Race Simulator
